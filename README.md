@@ -173,12 +173,16 @@ Run the script (interactive, recommended base-env mode):
 
 ```bash
 scripts/generate_supabase_env.sh --base-env supabase-project/.env --output supabase-project/.env
+cd supabase-project
+sh ./utils/generate-keys.sh
 ```
 
 Run non-interactively (uses defaults where available):
 
 ```bash
 scripts/generate_supabase_env.sh --non-interactive --base-env supabase-project/.env --output supabase-project/.env
+cd supabase-project
+sh ./utils/generate-keys.sh
 ```
 
 Calling the `supabase-self-hosting` skill from VS Code Chat

@@ -4,7 +4,8 @@ set -euo pipefail
 # Generate a Supabase .env (interactive, does not print secrets)
 #
 # Modes:
-# - Minimal mode (default): generates a minimal .env containing only the keys this script controls.
+# - Minimal mode (default): generates a minimal .env containing only the non-overlapping keys
+#   this script controls.
 # - Base-env mode (recommended): updates an existing (upstream) supabase docker .env in-place,
 #   preserving all other keys.
 #
@@ -113,14 +114,8 @@ else
   DASHBOARD_PASSWORD="$DASHBOARD_PASSWORD_CHOICE"
 fi
 
-# Secrets (generate)
-echo "Generating cryptographic keys (secrets will not be printed)."
-JWT_SECRET=$(gen_base64 48)
-ANON_KEY=$(gen_base64 48)
-SERVICE_ROLE_KEY=$(gen_base64 48)
-SECRET_KEY_BASE=$(gen_base64 48)
-VAULT_ENC_KEY=$(gen_hex 16)
-PG_META_CRYPTO_KEY=$(gen_base64 24)
+# Non-overlapping secrets (generate)
+echo "Generating non-overlapping secrets (secrets will not be printed)."
 MINIO_ROOT_PASSWORD=$(gen_hex 16)
 
 # Build/write .env (do not echo values)
@@ -134,13 +129,6 @@ if [[ -n "$BASE_ENV" ]]; then
   fi
 
   update_env_key "$OUT_PATH" "POSTGRES_PASSWORD" "$POSTGRES_PASSWORD"
-  update_env_key "$OUT_PATH" "JWT_SECRET" "$JWT_SECRET"
-  update_env_key "$OUT_PATH" "ANON_KEY" "$ANON_KEY"
-  update_env_key "$OUT_PATH" "SERVICE_ROLE_KEY" "$SERVICE_ROLE_KEY"
-  update_env_key "$OUT_PATH" "SECRET_KEY_BASE" "$SECRET_KEY_BASE"
-  update_env_key "$OUT_PATH" "VAULT_ENC_KEY" "$VAULT_ENC_KEY"
-  update_env_key "$OUT_PATH" "PG_META_CRYPTO_KEY" "$PG_META_CRYPTO_KEY"
-
   update_env_key "$OUT_PATH" "SUPABASE_PUBLIC_URL" "$SUPABASE_PUBLIC_URL"
   update_env_key "$OUT_PATH" "API_EXTERNAL_URL" "$API_EXTERNAL_URL"
   update_env_key "$OUT_PATH" "SITE_URL" "$SITE_URL"
@@ -156,14 +144,6 @@ else
 POSTGRES_DB=db
 POSTGRES_USER=postgres
 POSTGRES_PASSWORD=$POSTGRES_PASSWORD
-
-JWT_SECRET=$JWT_SECRET
-ANON_KEY=$ANON_KEY
-SERVICE_ROLE_KEY=$SERVICE_ROLE_KEY
-
-SECRET_KEY_BASE=$SECRET_KEY_BASE
-VAULT_ENC_KEY=$VAULT_ENC_KEY
-PG_META_CRYPTO_KEY=$PG_META_CRYPTO_KEY
 
 SUPABASE_PUBLIC_URL=$SUPABASE_PUBLIC_URL
 API_EXTERNAL_URL=$API_EXTERNAL_URL
@@ -186,6 +166,6 @@ chmod 600 "$OUT_PATH"
 
 echo "Wrote $OUT_PATH (secrets were generated and NOT printed)."
 echo "Keep this file private. Example: chmod 600 $OUT_PATH"
-echo "Next steps: edit any optional values, then run: docker compose pull && docker compose up -d"
+echo "Next steps: run ./utils/generate-keys.sh for auth/internal keys, then docker compose pull && docker compose up -d"
 
 exit 0

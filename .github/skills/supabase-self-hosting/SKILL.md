@@ -34,7 +34,7 @@ Before making changes or starting services, ask the operator the following and v
 - **Site URL (optional):** `SITE_URL` — Ask: "What is the site redirect URL (e.g. https://app.example.com)?" Default to `SUPABASE_PUBLIC_URL` if not provided.
  - **Host Caddy is required:** The `scripts/bootstrap.sh` in this workspace installs and enables a system `caddy` service. Ask: "Do you want to use the host-managed Caddy service to terminate TLS and reverse-proxy to Supabase? (yes)" — this skill only supports the host-managed Caddy flow (do not use containerized Caddy/Nginx proxy overlays).
 - **Postgres password (required):** `POSTGRES_PASSWORD` — Prompt for a secure value or offer to generate it locally.
-- **JWT secret and API keys (required):** `JWT_SECRET`, `ANON_KEY`, `SERVICE_ROLE_KEY` — Ask whether to provide existing keys or generate new ones. Warn that `SERVICE_ROLE_KEY` must never be exposed publicly.
+- **JWT secret and API keys (required):** `JWT_SECRET`, `ANON_KEY`, `SERVICE_ROLE_KEY` — Ask whether to provide existing keys or let upstream `./utils/generate-keys.sh` generate them. Warn that `SERVICE_ROLE_KEY` must never be exposed publicly.
 - **Dashboard credentials (required):** `DASHBOARD_USERNAME` and `DASHBOARD_PASSWORD` — Prompt and validate `DASHBOARD_PASSWORD` contains at least one letter.
 - **MinIO / Storage secrets (optional):** `MINIO_ROOT_PASSWORD`, `S3_PROTOCOL_ACCESS_KEY_ID`, `S3_PROTOCOL_ACCESS_KEY_SECRET` — Ask if Storage will use MinIO or external S3 and collect credentials accordingly.
 - **Email / Logflare tokens (optional):** `SMTP_*`, `LOGFLARE_*` — Offer to collect or leave blank for later configuration.
@@ -42,15 +42,17 @@ Before making changes or starting services, ask the operator the following and v
 Interactive flow
 
 1. Ask for `SUPABASE_PUBLIC_URL` and verify DNS by recommending the operator run a DNS check (or do it for them if given the domain). Ensure ports 80/443 are reachable before attempting TLS issuance.
-2. Ask whether to generate secrets automatically or accept operator-provided values. If generation is chosen, run secure generation commands and present only the storage location (never print secrets to logs).
-3. Summarize the collected configuration (listing non-secret fields and which values will be generated) and ask for confirmation before patching `supabase-project/.env` (created from `supabase/docker/.env.example`) using `scripts/generate_supabase_env.sh --base-env supabase-project/.env --output supabase-project/.env` and starting services.
- 4. Configure the host-managed Caddy service by placing your site config in `/etc/caddy/Caddyfile` (or edit `configs/Caddyfile.example`) and reload Caddy.
+2. Ask whether to generate the non-overlapping secrets automatically or accept operator-provided values. If generation is chosen, run secure generation commands and present only the storage location (never print secrets to logs).
+3. Patch `supabase-project/.env` (created from `supabase/docker/.env.example`) using `scripts/generate_supabase_env.sh --base-env supabase-project/.env --output supabase-project/.env`.
+4. Run upstream `./utils/generate-keys.sh` so the six overlapping auth/internal keys come from Supabase's source of truth.
+5. Summarize the collected configuration (listing non-secret fields and which values were generated) and ask for confirmation before starting services.
+6. Configure the host-managed Caddy service by placing your site config in `/etc/caddy/Caddyfile` (or edit `configs/Caddyfile.example`) and reload Caddy.
     - Do NOT attempt to start a containerized Caddy/Nginx proxy overlay on the same host (for example: do not run `docker compose -f docker-compose.yml -f docker-compose.nginx.yml up -d`).
     - The host Caddy should reverse-proxy to the local Supabase gateway on `127.0.0.1:8000`.
 
 Example confirmation prompt text the skill should use:
 
-"I will patch `supabase-project/.env` (created from `supabase/docker/.env.example`) using `scripts/generate_supabase_env.sh --base-env supabase-project/.env --output supabase-project/.env` (without printing secrets) and then start Supabase using `docker compose up -d`. Proceed? (yes/no)"
+"I will patch `supabase-project/.env` using `scripts/generate_supabase_env.sh --base-env supabase-project/.env --output supabase-project/.env`, run `./utils/generate-keys.sh` for the auth/internal keys, and then start Supabase using `docker compose up -d`. Proceed? (yes/no)"
 
 If the operator answers `no`, abort and provide instructions for manual review and next steps.
 
@@ -64,8 +66,9 @@ cp -r supabase/docker/* supabase-project/
 cp supabase/docker/.env.example supabase-project/.env
 # patch env in place (preserves upstream keys):
 scripts/generate_supabase_env.sh --base-env supabase-project/.env --output supabase-project/.env
+# generate the auth/internal keys from Supabase's source of truth:
 cd supabase-project
-# edit .env to set strong secrets (see below) then:
+sh ./utils/generate-keys.sh
 docker compose pull
 docker compose up -d
 # check services
@@ -75,20 +78,22 @@ docker compose ps
 Generate and manage secrets
 
 - Never use placeholder values from `.env.example` in production.
-- You can run the included generator to produce strong keys:
+- You can run the included generator to produce the non-overlapping operator inputs:
 
 ```bash
+scripts/generate_supabase_env.sh --base-env supabase-project/.env --output supabase-project/.env
+cd supabase-project
 sh ./utils/generate-keys.sh
 # review .env after it runs and replace/commit carefully (do NOT commit secrets)
 ```
 
 Important env vars (examples)
 
-- `POSTGRES_PASSWORD` — DB passwords (use letters+numbers to avoid URL encoding issues)
-- `JWT_SECRET` — used by Auth/PostgREST (generate securely)
-- `ANON_KEY`, `SERVICE_ROLE_KEY` — client and server API keys
-- `SECRET_KEY_BASE`, `VAULT_ENC_KEY`, `PG_META_CRYPTO_KEY` — other encryption keys (follow lengths in docs)
-- `SUPABASE_PUBLIC_URL`, `API_EXTERNAL_URL`, `SITE_URL` — set to your HTTPS domain
+- `POSTGRES_PASSWORD` — DB passwords (generated by `scripts/generate_supabase_env.sh` or operator-provided)
+- `DASHBOARD_USERNAME`, `DASHBOARD_PASSWORD` — dashboard access (generated by `scripts/generate_supabase_env.sh` or operator-provided)
+- `MINIO_ROOT_PASSWORD` — storage root password (generated by `scripts/generate_supabase_env.sh` or operator-provided)
+- `SUPABASE_PUBLIC_URL`, `API_EXTERNAL_URL`, `SITE_URL` — set to your HTTPS domain (handled by `scripts/generate_supabase_env.sh`)
+- `JWT_SECRET`, `ANON_KEY`, `SERVICE_ROLE_KEY`, `SECRET_KEY_BASE`, `VAULT_ENC_KEY`, `PG_META_CRYPTO_KEY` — generated by upstream `./utils/generate-keys.sh`
 
 Reverse proxy & HTTPS (recommended)
 

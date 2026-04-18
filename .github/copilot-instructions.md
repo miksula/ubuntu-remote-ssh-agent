@@ -15,8 +15,7 @@ Where things live
 
 Quick actions for agents
 
-- To generate or update a skill from upstream docs, use the MCP skill-creator or the agent command shown in README.
-- To generate a Supabase `.env` for the operator, run `scripts/generate_supabase_env.sh --base-env supabase-project/.env --output supabase-project/.env` (interactive). See README for details.
+- To generate a Supabase `.env` for the operator, run `scripts/generate_supabase_env.sh --base-env supabase-project/.env --output supabase-project/.env` for non-overlapping values, then run `cd supabase-project && sh ./utils/generate-keys.sh` for the auth/internal keys. See README for details.
 - To instruct the operator about Caddy: the repository uses a host-managed Caddy (`systemd`) by default; do NOT recommend starting a containerized Caddy overlay on the same host.
 
 How to invoke the `supabase-self-hosting` skill (operator-facing)
@@ -30,7 +29,7 @@ Use the supabase-self-hosting skill to configure my Supabase instance
 
 3. The skill will ask for operator inputs (domain, Postgres password or generate, dashboard credentials, etc.).
    - Always treat secrets as sensitive: do not print them in chat, logs, or commit them.
-   - The script `scripts/generate_supabase_env.sh` is available and the skill may call/ask the operator to run it.
+   - The script `scripts/generate_supabase_env.sh` is available and the skill may call/ask the operator to run it, followed by `./utils/generate-keys.sh` for the upstream auth/internal keys.
 
 Operator interaction guidance for agents
 
