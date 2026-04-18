@@ -1,0 +1,47 @@
+{
+  # Global options — adjust email for ACME notifications
+  email admin@example.com
+}
+
+# Replace `your-domain.example.com` with your actual SUPABASE_PUBLIC_URL host
+your-domain.example.com {
+  encode zstd gzip
+
+  # Security headers
+  header {
+    -Server
+    X-Content-Type-Options nosniff
+    X-Frame-Options SAMEORIGIN
+    Referrer-Policy strict-origin-when-cross-origin
+  }
+
+  # Access logs (ensure /var/log/caddy is writable by caddy)
+  log {
+    output file /var/log/caddy/supabase-access.log
+    format json
+  }
+
+  # Simple health endpoint used by tooling
+  handle /up {
+    respond "OK" 200
+  }
+
+  # Proxy all traffic (API gateway / Kong) to the local Supabase gateway
+  reverse_proxy 127.0.0.1:8000 {
+    # Forward essential headers
+    header_up X-Forwarded-Proto {scheme}
+    header_up X-Forwarded-Host {host}
+    header_up X-Forwarded-For {remote}
+  }
+}
+
+# If you run additional hostnames (Studio, API subdomains), add similar blocks:
+#
+# studio.your-domain.example.com {
+#   reverse_proxy 127.0.0.1:8000
+# }
+#
+# Notes:
+# - This Caddyfile assumes the Supabase Docker stack exposes the gateway on 127.0.0.1:8000.
+# - Do NOT run a containerized Caddy that binds 80/443 when system Caddy is active.
+# - Ensure ports 80/443 are open in your firewall and DNS A records point to this host.

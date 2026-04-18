@@ -1,0 +1,26 @@
+# Example Caddyfile for app.example.com - a simple SPA (single-page application) with api/ backend and some security headers.
+app.example.com {
+  encode zstd gzip
+
+  # Security headers
+  header {
+    -Server
+    X-Content-Type-Options nosniff
+    X-Frame-Options SAMEORIGIN
+    Referrer-Policy strict-origin-when-cross-origin
+  }
+
+  # Access logs (ensure /var/log/caddy is writable by caddy)
+  log {
+    output file /var/log/caddy/app-access.log
+    format json
+  }
+
+  # Simple health endpoint used by tooling
+  handle /up {
+    respond "OK" 200
+  }
+
+  # Proxy API requests to the local Supabase gateway
+  reverse_proxy /api/*
+}

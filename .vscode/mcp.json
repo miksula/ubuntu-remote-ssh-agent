@@ -1,0 +1,9 @@
+{
+    "servers": {
+        "skill-doc-generator": {
+            "command": "npx",
+            "args": ["skill-doc-generator"]
+        }
+    },
+    "inputs": []
+}
