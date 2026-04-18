@@ -162,76 +162,53 @@ sudo journalctl -u caddy -f
 
 ## 4. Install Supabase
 
-This repository includes an interactive helper script to generate a secure
-Supabase `.env` and a skill (`supabase-self-hosting`) that can guide operators.
+This repository supports two Supabase setup paths:
 
-The skill is based on official
-[documentation](https://supabase.com/docs/guides/self-hosting/docker) and can
-also completed manually.
+- Manual setup
+- Agent-assisted setup with the `supabase-self-hosting` skill
 
-Run the script (interactive, recommended base-env mode):
+Both paths use the same host-managed Caddy reverse proxy from step 3.
+
+### Manual setup
 
 ```bash
+git clone --depth 1 https://github.com/supabase/supabase
+mkdir -p supabase-project
+cp -r supabase/docker/* supabase-project/
+cp supabase/docker/.env.example supabase-project/.env
+
 scripts/generate_supabase_env.sh --base-env supabase-project/.env --output supabase-project/.env
 cd supabase-project
 sh ./utils/generate-keys.sh
+
+docker compose pull
+docker compose up -d
+docker compose ps
 ```
 
-Run non-interactively (uses defaults where available):
+### Agent-assisted setup
 
-```bash
-scripts/generate_supabase_env.sh --non-interactive --base-env supabase-project/.env --output supabase-project/.env
-cd supabase-project
-sh ./utils/generate-keys.sh
-```
+- Open the VS Code Copilot
+- Use VS Code "Remote - SSH" / Clone this repo into VPS host
+- Ask the assistant to `use the supabase-self-hosting skill`.
+- The skill will collect the required operator inputs, patch
+  `supabase-project/.env`, run `./utils/generate-keys.sh`, and start the stack.
+- The skill assumes host-managed Caddy is already installed and running from
+  `scripts/bootstrap.sh`.
 
-Calling the `supabase-self-hosting` skill from VS Code Chat
+### Validation
 
-- Open the VS Code Copilot / Chat pane.
-- Ask the assistant to `use the supabase-self-hosting skill` or type a natural
-  request such as:
-
-```text
-Use the supabase-self-hosting skill to configure my Supabase instance
-```
-
-- The skill will prompt for operator inputs (it will _not_ echo secrets):
-  - `SUPABASE_PUBLIC_URL` (must start with `https://`)
-  - `POSTGRES_PASSWORD` (you can provide or request generation)
-  - `DASHBOARD_USERNAME` / `DASHBOARD_PASSWORD` (or request generation)
-  - whether to use host-managed Caddy (this setup requires it)
-
-- When interacting, answer prompts clearly and provide the full HTTPS domain
-  when asked. If you prefer the script, tell the skill you have already
-  generated the `.env` and provide its path.
-
-Security notes
-
-- The skill and script never print secrets to the chat or stdout; generated
-  secrets are written only to the `.env` file and the file is created with
-  `chmod 600`.
-- Do not commit the generated `.env` to git. Add it to `.gitignore` or store
-  secrets in a secrets manager.
-
-Notes
-
-- **DNS**: Ensure your domain names point to the server IP before enabling.
-  TLS—Caddy will obtain certificates automatically for reachable hostnames.
-- **Health check**: The example includes a simple health endpoint at
-  `handle /up` that responds `OK`. Use `curl` to verify:
-  `curl -I https://your-domain.example/up`.
-- **Reverse proxy paths**: The example routes `/api/*` to a separate backend.
-  Adjust these paths and backend ports to match your apps.
-- **Logs**: The example writes access logs to `/var/log/caddy/test-access.log`
-  (see the `log` block). You can also use `journalctl -u caddy` for systemd
-  logs.
-- **Local development**: For local testing, replace production hostnames in the
-  Caddyfile with `localhost` and the ports your dev servers use.
+- DNS: make sure your domain points to the server IP before enabling TLS.
+- Health: verify the proxy with `curl -I https://your-domain.example/up`.
+- Logs: use `sudo journalctl -u caddy -f` for the reverse proxy and
+  `docker compose logs <service>` for Supabase services.
+- Local development: replace production hostnames in `configs/Caddyfile.example`
+  with `localhost` and your local ports.
 
 ### 5. Use VS Code Remote - SSH For Full Agent Visibility
 
-If you want GitHub Copilot to work directly against the remote server, install
-the `Remote - SSH` VS Code extension.
+For GitHub Copilot to work directly against the remote server, install the
+`Remote - SSH` VS Code extension.
 
 Why this matters:
 
