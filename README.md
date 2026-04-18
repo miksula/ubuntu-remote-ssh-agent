@@ -169,16 +169,16 @@ The skill is based on official documentation
 https://supabase.com/docs/guides/self-hosting/docker and can completed manually,
 too.
 
-Run the script (interactive):
+Run the script (interactive, recommended base-env mode):
 
 ```bash
-scripts/generate_supabase_env.sh --output supabase-project/.env
+scripts/generate_supabase_env.sh --base-env supabase-project/.env --output supabase-project/.env
 ```
 
 Run non-interactively (uses defaults where available):
 
 ```bash
-scripts/generate_supabase_env.sh --non-interactive --output supabase-project/.env
+scripts/generate_supabase_env.sh --non-interactive --base-env supabase-project/.env --output supabase-project/.env
 ```
 
 Calling the `supabase-self-hosting` skill from VS Code Chat

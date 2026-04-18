@@ -43,14 +43,14 @@ Interactive flow
 
 1. Ask for `SUPABASE_PUBLIC_URL` and verify DNS by recommending the operator run a DNS check (or do it for them if given the domain). Ensure ports 80/443 are reachable before attempting TLS issuance.
 2. Ask whether to generate secrets automatically or accept operator-provided values. If generation is chosen, run secure generation commands and present only the storage location (never print secrets to logs).
-3. Summarize the collected configuration (listing non-secret fields and which values will be generated) and ask for confirmation before writing to ` .env ` or starting services.
+3. Summarize the collected configuration (listing non-secret fields and which values will be generated) and ask for confirmation before patching `supabase-project/.env` (created from `supabase/docker/.env.example`) using `scripts/generate_supabase_env.sh --base-env supabase-project/.env --output supabase-project/.env` and starting services.
  4. Configure the host-managed Caddy service by placing your site config in `/etc/caddy/Caddyfile` (or edit `configs/Caddyfile.example`) and reload Caddy.
     - Do NOT attempt to start a containerized Caddy/Nginx proxy overlay on the same host (for example: do not run `docker compose -f docker-compose.yml -f docker-compose.nginx.yml up -d`).
     - The host Caddy should reverse-proxy to the local Supabase gateway on `127.0.0.1:8000`.
 
 Example confirmation prompt text the skill should use:
 
-"I will write the configuration to ` .env ` (without printing secrets) and start Supabase using `docker compose up -d`. Proceed? (yes/no)"
+"I will patch `supabase-project/.env` (created from `supabase/docker/.env.example`) using `scripts/generate_supabase_env.sh --base-env supabase-project/.env --output supabase-project/.env` (without printing secrets) and then start Supabase using `docker compose up -d`. Proceed? (yes/no)"
 
 If the operator answers `no`, abort and provide instructions for manual review and next steps.
 
@@ -62,6 +62,8 @@ git clone --depth 1 https://github.com/supabase/supabase
 mkdir supabase-project
 cp -r supabase/docker/* supabase-project/
 cp supabase/docker/.env.example supabase-project/.env
+# patch env in place (preserves upstream keys):
+scripts/generate_supabase_env.sh --base-env supabase-project/.env --output supabase-project/.env
 cd supabase-project
 # edit .env to set strong secrets (see below) then:
 docker compose pull
