@@ -165,9 +165,9 @@ sudo journalctl -u caddy -f
 This repository includes an interactive helper script to generate a secure
 Supabase `.env` and a skill (`supabase-self-hosting`) that can guide operators.
 
-The skill is based on official documentation
-https://supabase.com/docs/guides/self-hosting/docker and can completed manually,
-too.
+The skill is based on official
+[documentation](https://supabase.com/docs/guides/self-hosting/docker) and can
+also completed manually.
 
 Run the script (interactive, recommended base-env mode):
 
