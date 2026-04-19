@@ -26,6 +26,22 @@ your-spa-domain.example.com {
 	# NOTE: This routes only /api/* to the backend.
 	reverse_proxy /api/* 127.0.0.1:3000
 
+	# --- Supabase Kong/Lambda variant (optional) ---
+	# If you want your SPA to talk to Supabase via the Supabase docker gateway
+	# (Kong) instead of your Node.js API, you typically want to STRIP the
+	# leading /api prefix.
+	#
+	# Example SPA calls:
+	# - /api/auth/v1/...  -> Kong receives /auth/v1/...
+	# - /api/rest/v1/...  -> Kong receives /rest/v1/...
+	# - /api/functions/v1/<name>/... -> Kong receives /functions/v1/<name>/...
+	#
+	# To enable this variant, comment out the Node.js reverse_proxy line above
+	# and uncomment the block below.
+	# handle_path /api/* {
+	#   reverse_proxy 127.0.0.1:8000
+	# }
+
 	# SPA fallback: serve index.html for non-file routes.
 	try_files {path} /index.html
 	file_server
