@@ -1,0 +1,25 @@
+{
+	# Global options — adjust email for ACME notifications
+	email admin@example.com
+}
+
+your-static-domain.example.com {
+	encode zstd gzip
+
+	# Security headers
+	header {
+		-Server
+		X-Content-Type-Options nosniff
+		X-Frame-Options SAMEORIGIN
+		Referrer-Policy strict-origin-when-cross-origin
+	}
+
+	# Serve static files from this directory
+	root * /var/www/site
+	file_server
+
+	# Simple health endpoint used by tooling
+	handle /up {
+		respond "OK" 200
+	}
+}

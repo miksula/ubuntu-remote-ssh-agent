@@ -1,9 +1,9 @@
 # Ubuntu VPS Setup Guide
 
 This repository contains practical instructions for setting up a real Ubuntu
-(LTS) for self-hosting - with VPS provider such as DigitalOcean or Hetzner.
+(LTS) for self-hosting with VPS provider such as DigitalOcean or Hetzner.
 
-There is also Copilot-oriented instructions for setting up Supabase self-hosted.
+There is also Copilot-oriented skill for setting up self-hosted Supabase.
 
 - `.github/` folder contains Copilot-oriented instructions
 - `scripts/` folder contains executable automation and install scripts
@@ -138,16 +138,29 @@ echo "Then open ports as needed: ufw allow PORT/tcp"
 
 ## 3. Configure Caddy Server
 
-This repository includes an example Caddy configuration at
-[configs/Caddyfile.example](configs/Caddyfile.example). Copy and adapt that file
-to `/etc/caddy/Caddyfile` and update the site names and backend addresses to
-match your services and domains.
+This repository includes multiple example Caddy configurations. Pick the one
+that matches your use case and copy it to `/etc/caddy/Caddyfile`.
+
+- Supabase reverse proxy (API gateway -> `127.0.0.1:8000`):
+  [configs/Caddyfile.example](configs/Caddyfile.example)
+- Static files / file server:
+  [configs/Caddyfile.static-files.example](configs/Caddyfile.static-files.example)
+- SPA assets + `/api/*` proxy to Node.js (`127.0.0.1:3000`):
+  [configs/Caddyfile.spa-api.example](configs/Caddyfile.spa-api.example)
 
 Quick setup
 
 ```bash
-# copy example to system location
+# choose one example to copy:
+# Supabase
 sudo cp configs/Caddyfile.example /etc/caddy/Caddyfile
+
+# Static file server
+# sudo cp configs/Caddyfile.static-files.example /etc/caddy/Caddyfile
+
+# SPA + Node.js API proxy
+# sudo cp configs/Caddyfile.spa-api.example /etc/caddy/Caddyfile
+
 sudo chown root:root /etc/caddy/Caddyfile
 
 # validate config
@@ -159,6 +172,11 @@ sudo systemctl reload caddy
 # follow logs
 sudo journalctl -u caddy -f
 ```
+
+Notes for the included examples:
+- Static files example serves content from `/var/www/site` (set `root * /var/www/site` to your directory).
+- SPA + Node example serves SPA assets from `/var/www/site` and proxies only `/api/*` to `127.0.0.1:3000`.
+- Supabase example assumes Supabase gateway is reachable on `127.0.0.1:8000`.
 
 ## 4. Install Supabase
 
