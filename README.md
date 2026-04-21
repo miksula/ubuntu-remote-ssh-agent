@@ -4,7 +4,8 @@ This repo is a practical Ubuntu VPS setup guide focused on getting a real Ubuntu
 LTS server ready for self-hosting (e.g., with providers like Hetzner or
 DigitalOcean).
 
-There is also a Copilot-oriented skill for setting up self-hosted Supabase.
+There is also a Copilot-oriented skill for setting up self-hosted Supabase in
+guided manner.
 
 - `.github/` Copilot-oriented instructions
 - `scripts/` Automation and install scripts
@@ -224,11 +225,12 @@ scripts/setup_supabase_project.sh
   `supabase-project`; if a Supabase project already exists, it can patch `.env`
   with `scripts/generate_supabase_env.sh` and then run
   `./utils/generate-keys.sh`.
-- Because you are in a Remote - SSH session, the agent can inspect the remote
-  server environment, answer server-specific questions, plan changes, and help
-  debug issues live on the production host.
 - The skill assumes host-managed Caddy is already installed and running from
   `scripts/bootstrap.sh`.
+
+Note: in a Remote - SSH session, the agent can inspect the remote server
+environment, answer server-specific questions, plan changes, and help debug
+issues live on the production host.
 
 Practical preference
 
