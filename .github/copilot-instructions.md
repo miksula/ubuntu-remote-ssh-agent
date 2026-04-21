@@ -68,6 +68,11 @@ Notes for maintainers
 - The repo bootstrap installs a system `caddy` service. The skill explicitly expects host-managed Caddy; avoid launching containerized proxy overlays unless the operator intentionally disables the system Caddy.
 - Keep `configs/Caddyfile.example` in sync with `SKILL.md` instructions.
 
+- Available maintenance workflow
+  - For ongoing Ubuntu LTS VPS upkeep (security updates, Docker/Supabase refreshes, and Caddy/TLS verification) use the `server-maintenance` skill:
+    - `.github/skills/server-maintenance/SKILL.md`
+    - It reads server state, suggests ranked updates, and guides the operator through an operator-led checklist without executing changes.
+
 If in doubt
 
 - Ask the repository owner or open an issue in the repo describing the desired agent behavior and the exact inputs you need.
