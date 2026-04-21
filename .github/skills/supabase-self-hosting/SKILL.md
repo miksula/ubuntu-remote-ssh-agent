@@ -32,6 +32,7 @@ Before making changes or starting services, ask the operator the following and v
 - **External domain (required):** `SUPABASE_PUBLIC_URL` — Ask: "What is the external HTTPS base URL for Supabase? (e.g. https://supabase.example.com)". Validate starts with `https://`.
 - **API external URL (optional):** `API_EXTERNAL_URL` — Ask: "Is `API_EXTERNAL_URL` the same as `SUPABASE_PUBLIC_URL`? If not, provide the full URL." Default to the public URL.
 - **Site URL (optional):** `SITE_URL` — Ask: "What is the site redirect URL (e.g. https://app.example.com)?" Default to `SUPABASE_PUBLIC_URL` if not provided.
+- **DNS / domain validation (required):** Confirm the external domain is pointed at this host and that ports 80/443 are reachable. This must be checked before TLS issuance or starting Supabase.
  - **Host Caddy is required:** The `scripts/bootstrap.sh` in this workspace installs and enables a system `caddy` service. Ask: "Do you want to use the host-managed Caddy service to terminate TLS and reverse-proxy to Supabase? (yes)" — this skill only supports the host-managed Caddy flow (do not use containerized Caddy/Nginx proxy overlays).
 - **Postgres password (required):** `POSTGRES_PASSWORD` — Prompt for a secure value or offer to generate it locally.
 - **JWT secret and API keys (required):** `JWT_SECRET`, `ANON_KEY`, `SERVICE_ROLE_KEY` — Ask whether to provide existing keys or let upstream `./utils/generate-keys.sh` generate them. Warn that `SERVICE_ROLE_KEY` must never be exposed publicly.
@@ -41,9 +42,9 @@ Before making changes or starting services, ask the operator the following and v
 
 Interactive flow
 
-1. Ask for `SUPABASE_PUBLIC_URL` and verify DNS by recommending the operator run a DNS check (or do it for them if given the domain). Ensure ports 80/443 are reachable before attempting TLS issuance.
+1. Ask for `SUPABASE_PUBLIC_URL` and verify DNS by recommending the operator run a DNS check (or do it for them if given the domain). Ensure the domain resolves to this host and ports 80/443 are reachable before attempting TLS issuance. Make it clear that DNS and reverse-proxy/TLS are prerequisites outside the helper script.
 2. Ask whether to generate the non-overlapping secrets automatically or accept operator-provided values. If generation is chosen, run secure generation commands and present only the storage location (never print secrets to logs).
-3. Create or verify `supabase-project` and patch `supabase-project/.env` using `scripts/setup_supabase_project.sh` where possible, or with `scripts/generate_supabase_env.sh --base-env supabase-project/.env --output supabase-project/.env` if the project already exists.
+3. Create or verify `supabase-project` and patch `supabase-project/.env` using `scripts/setup_supabase_project.sh` where possible, or with `scripts/generate_supabase_env.sh --base-env supabase-project/.env --output supabase-project/.env` if the project already exists. Note that this script only bootstraps the Supabase project and does not configure external DNS, Caddy, or TLS.
 4. Run upstream `./utils/generate-keys.sh` so the six overlapping auth/internal keys come from Supabase's source of truth.
 5. Summarize the collected configuration (listing non-secret fields and which values were generated) and ask for confirmation before starting services.
 6. Configure the host-managed Caddy service by placing your site config in `/etc/caddy/Caddyfile` (or edit `configs/Caddyfile.example`) and reload Caddy.
@@ -52,7 +53,7 @@ Interactive flow
 
 Example confirmation prompt text the skill should use:
 
-"I will provision `supabase-project` using `scripts/setup_supabase_project.sh` or patch `supabase-project/.env` with `scripts/generate_supabase_env.sh --base-env supabase-project/.env --output supabase-project/.env`, run `./utils/generate-keys.sh` for the auth/internal keys, and then start Supabase using `docker compose up -d`. Proceed? (yes/no)"
+"I will provision `supabase-project` using `scripts/setup_supabase_project.sh` or patch `supabase-project/.env` with `scripts/generate_supabase_env.sh --base-env supabase-project/.env --output supabase-project/.env`, run `./utils/generate-keys.sh` for the auth/internal keys, and then start Supabase using `docker compose up -d`. I will also remind you that DNS, host-managed Caddy, and TLS are required separately and are not configured by the helper script. Proceed? (yes/no)"
 
 If the operator answers `no`, abort and provide instructions for manual review and next steps.
 
@@ -60,6 +61,7 @@ Quick start (minimal)
 
 ```bash
 # Preferred: use the repository helper script to scaffold the Supabase project
+# Note: this bootstraps the local Supabase project only; DNS/Caddy/TLS are still required separately.
 scripts/setup_supabase_project.sh
 
 # Then start the stack
