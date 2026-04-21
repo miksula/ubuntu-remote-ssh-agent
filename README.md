@@ -219,7 +219,10 @@ scripts/setup_supabase_project.sh
 - Open the VS Code Copilot
 - Use VS Code "Remote - SSH" / Clone this repo into VPS host
 - Ask the assistant to `use the supabase-self-hosting skill`.
-- The skill will prefer `scripts/setup_supabase_project.sh` to scaffold `supabase-project`; if a Supabase project already exists, it can patch `.env` with `scripts/generate_supabase_env.sh` and then run `./utils/generate-keys.sh`.
+- The skill will prefer `scripts/setup_supabase_project.sh` to scaffold
+  `supabase-project`; if a Supabase project already exists, it can patch `.env`
+  with `scripts/generate_supabase_env.sh` and then run
+  `./utils/generate-keys.sh`.
 - Because you are in a Remote - SSH session, the agent can inspect the remote
   server environment, answer server-specific questions, plan changes, and help
   debug issues live on the production host.
