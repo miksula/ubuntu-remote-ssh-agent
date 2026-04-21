@@ -43,7 +43,7 @@ Interactive flow
 
 1. Ask for `SUPABASE_PUBLIC_URL` and verify DNS by recommending the operator run a DNS check (or do it for them if given the domain). Ensure ports 80/443 are reachable before attempting TLS issuance.
 2. Ask whether to generate the non-overlapping secrets automatically or accept operator-provided values. If generation is chosen, run secure generation commands and present only the storage location (never print secrets to logs).
-3. Patch `supabase-project/.env` (created from `supabase/docker/.env.example`) using `scripts/generate_supabase_env.sh --base-env supabase-project/.env --output supabase-project/.env`.
+3. Create or verify `supabase-project` and patch `supabase-project/.env` using `scripts/setup_supabase_project.sh` where possible, or with `scripts/generate_supabase_env.sh --base-env supabase-project/.env --output supabase-project/.env` if the project already exists.
 4. Run upstream `./utils/generate-keys.sh` so the six overlapping auth/internal keys come from Supabase's source of truth.
 5. Summarize the collected configuration (listing non-secret fields and which values were generated) and ask for confirmation before starting services.
 6. Configure the host-managed Caddy service by placing your site config in `/etc/caddy/Caddyfile` (or edit `configs/Caddyfile.example`) and reload Caddy.
@@ -52,23 +52,18 @@ Interactive flow
 
 Example confirmation prompt text the skill should use:
 
-"I will patch `supabase-project/.env` using `scripts/generate_supabase_env.sh --base-env supabase-project/.env --output supabase-project/.env`, run `./utils/generate-keys.sh` for the auth/internal keys, and then start Supabase using `docker compose up -d`. Proceed? (yes/no)"
+"I will provision `supabase-project` using `scripts/setup_supabase_project.sh` or patch `supabase-project/.env` with `scripts/generate_supabase_env.sh --base-env supabase-project/.env --output supabase-project/.env`, run `./utils/generate-keys.sh` for the auth/internal keys, and then start Supabase using `docker compose up -d`. Proceed? (yes/no)"
 
 If the operator answers `no`, abort and provide instructions for manual review and next steps.
 
 Quick start (minimal)
 
 ```bash
-# Fetch the Supabase source on this host and prepare the project dir
-git clone --depth 1 https://github.com/supabase/supabase
-mkdir supabase-project
-cp -r supabase/docker/* supabase-project/
-cp supabase/docker/.env.example supabase-project/.env
-# patch env in place (preserves upstream keys):
-scripts/generate_supabase_env.sh --base-env supabase-project/.env --output supabase-project/.env
-# generate the auth/internal keys from Supabase's source of truth:
+# Preferred: use the repository helper script to scaffold the Supabase project
+scripts/setup_supabase_project.sh
+
+# Then start the stack
 cd supabase-project
-sh ./utils/generate-keys.sh
 docker compose pull
 docker compose up -d
 # check services
@@ -78,7 +73,8 @@ docker compose ps
 Generate and manage secrets
 
 - Never use placeholder values from `.env.example` in production.
-- You can run the included generator to produce the non-overlapping operator inputs:
+- You can use `scripts/setup_supabase_project.sh` to clone upstream source, build `supabase-project`, patch `.env`, and generate auth/internal keys.
+- You can also run the included generator directly to produce only the non-overlapping operator inputs:
 
 ```bash
 scripts/generate_supabase_env.sh --base-env supabase-project/.env --output supabase-project/.env

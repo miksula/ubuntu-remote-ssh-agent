@@ -44,7 +44,12 @@ clone_source() {
   fi
 
   echo "Cloning Supabase upstream from $UPSTREAM_URL (branch: $BRANCH) into $CLONE_DIR..."
-  git clone --depth 1 --branch "$BRANCH" "$UPSTREAM_URL" "$CLONE_DIR"
+  git clone --filter=blob:none --no-checkout --branch "$BRANCH" "$UPSTREAM_URL" "$CLONE_DIR"
+  pushd "$CLONE_DIR" >/dev/null
+  git sparse-checkout init --cone
+  git sparse-checkout set docker
+  git checkout "$BRANCH"
+  popd >/dev/null
 }
 
 prepare_project_dir() {
@@ -68,9 +73,9 @@ prepare_project_dir() {
 patch_env() {
   echo "Patching $PROJECT_DIR/.env using scripts/generate_supabase_env.sh..."
   if [[ "$NONINTERACTIVE" -eq 1 ]]; then
-    "$SCRIPT_ROOT/generate_supabase_env.sh" --non-interactive --base-env "$PROJECT_DIR/.env" --output "$PROJECT_DIR/.env"
+    bash "$SCRIPT_ROOT/generate_supabase_env.sh" --non-interactive --base-env "$PROJECT_DIR/.env" --output "$PROJECT_DIR/.env"
   else
-    "$SCRIPT_ROOT/generate_supabase_env.sh" --base-env "$PROJECT_DIR/.env" --output "$PROJECT_DIR/.env"
+    bash "$SCRIPT_ROOT/generate_supabase_env.sh" --base-env "$PROJECT_DIR/.env" --output "$PROJECT_DIR/.env"
   fi
 }
 
@@ -80,7 +85,7 @@ generate_keys() {
   if [[ ! -x ./utils/generate-keys.sh && -f ./utils/generate-keys.sh ]]; then
     chmod +x ./utils/generate-keys.sh
   fi
-  sh ./utils/generate-keys.sh
+  sh ./utils/generate-keys.sh --update-env 
   popd >/dev/null
 }
 

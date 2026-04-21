@@ -15,7 +15,8 @@ Where things live
 
 Quick actions for agents
 
-- To generate a Supabase `.env` for the operator, run `scripts/generate_supabase_env.sh --base-env supabase-project/.env --output supabase-project/.env` for non-overlapping values, then run `cd supabase-project && sh ./utils/generate-keys.sh` for the auth/internal keys. See README for details.
+- For a repeatable Supabase install flow, use `scripts/setup_supabase_project.sh` to clone upstream `supabase`, scaffold `supabase-project`, patch `.env`, and run `./utils/generate-keys.sh`.
+- If the operator only needs env generation, run `scripts/generate_supabase_env.sh --base-env supabase-project/.env --output supabase-project/.env` and then `cd supabase-project && sh ./utils/generate-keys.sh`. See README for details.
 - To instruct the operator about Caddy: the repository uses a host-managed Caddy (`systemd`) by default; do NOT recommend starting a containerized Caddy overlay on the same host.
 
 How to invoke the `supabase-self-hosting` skill (operator-facing)
@@ -29,7 +30,7 @@ Use the supabase-self-hosting skill to configure my Supabase instance
 
 3. The skill will ask for operator inputs (domain, Postgres password or generate, dashboard credentials, etc.).
    - Always treat secrets as sensitive: do not print them in chat, logs, or commit them.
-   - The script `scripts/generate_supabase_env.sh` is available and the skill may call/ask the operator to run it, followed by `./utils/generate-keys.sh` for the upstream auth/internal keys.
+   - The helper script `scripts/setup_supabase_project.sh` is available for the full Supabase project scaffold. The skill may also call/ask the operator to run `scripts/generate_supabase_env.sh`, followed by `./utils/generate-keys.sh` for the upstream auth/internal keys.
 
 Operator interaction guidance for agents
 
