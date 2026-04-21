@@ -1,7 +1,8 @@
 # Ubuntu VPS Setup Guide
 
-This repository contains practical instructions for setting up a real Ubuntu
-(LTS) server for self-hosting with VPS provider such as DigitalOcean or Hetzner.
+This repo is a practical Ubuntu VPS setup guide focused on getting a real Ubuntu
+LTS server ready for self-hosting (e.g., with providers like Hetzner or
+DigitalOcean).
 
 There is also a Copilot-oriented skill for setting up self-hosted Supabase.
 
@@ -228,6 +229,14 @@ scripts/setup_supabase_project.sh
   debug issues live on the production host.
 - The skill assumes host-managed Caddy is already installed and running from
   `scripts/bootstrap.sh`.
+
+Practical preference
+
+- Prefer the automated path by default for experienced operators who already
+  know their domain/Caddy/TLS requirements.
+- Use the skill when you want guardrails (especially first-time deployments,
+  production concerns, or when you’re unsure about the required reverse
+  proxy/TLS/DNS sequencing).
 
 ### Validation
 

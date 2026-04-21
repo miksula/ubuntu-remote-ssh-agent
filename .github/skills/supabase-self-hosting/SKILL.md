@@ -44,16 +44,17 @@ Interactive flow
 
 1. Ask for `SUPABASE_PUBLIC_URL` and verify DNS by recommending the operator run a DNS check (or do it for them if given the domain). Ensure the domain resolves to this host and ports 80/443 are reachable before attempting TLS issuance. Make it clear that DNS and reverse-proxy/TLS are prerequisites outside the helper script.
 2. Ask whether to generate the non-overlapping secrets automatically or accept operator-provided values. If generation is chosen, run secure generation commands and present only the storage location (never print secrets to logs).
-3. Create or verify `supabase-project` and patch `supabase-project/.env` using `scripts/setup_supabase_project.sh` where possible, or with `scripts/generate_supabase_env.sh --base-env supabase-project/.env --output supabase-project/.env` if the project already exists. Note that this script only bootstraps the Supabase project and does not configure external DNS, Caddy, or TLS.
-4. Run upstream `./utils/generate-keys.sh` so the six overlapping auth/internal keys come from Supabase's source of truth.
-5. Summarize the collected configuration (listing non-secret fields and which values were generated) and ask for confirmation before starting services.
-6. Configure the host-managed Caddy service by placing your site config in `/etc/caddy/Caddyfile` (or edit `configs/Caddyfile.example`) and reload Caddy.
+ 3. Create or verify `supabase-project` using `scripts/setup_supabase_project.sh` where possible. Note that this helper bootstraps the Supabase project and does not configure external DNS, Caddy, or TLS.
+ 4. Run upstream `./utils/generate-keys.sh` so the six overlapping auth/internal keys come from Supabase's source of truth.
+ 5. Patch/override `supabase-project/.env` using `scripts/generate_supabase_env.sh --base-env supabase-project/.env --output supabase-project/.env` (so operator-provided non-overlapping inputs are set last).
+ 6. Summarize the collected configuration (listing non-secret fields and which values were generated) and ask for confirmation before starting services.
+ 7. Configure the host-managed Caddy service by placing your site config in `/etc/caddy/Caddyfile` (or edit `configs/Caddyfile.example`) and reload Caddy.
     - Do NOT attempt to start a containerized Caddy/Nginx proxy overlay on the same host (for example: do not run `docker compose -f docker-compose.yml -f docker-compose.nginx.yml up -d`).
     - The host Caddy should reverse-proxy to the local Supabase gateway on `127.0.0.1:8000`.
 
 Example confirmation prompt text the skill should use:
 
-"I will provision `supabase-project` using `scripts/setup_supabase_project.sh` or patch `supabase-project/.env` with `scripts/generate_supabase_env.sh --base-env supabase-project/.env --output supabase-project/.env`, run `./utils/generate-keys.sh` for the auth/internal keys, and then start Supabase using `docker compose up -d`. I will also remind you that DNS, host-managed Caddy, and TLS are required separately and are not configured by the helper script. Proceed? (yes/no)"
+  "I will provision `supabase-project` using `scripts/setup_supabase_project.sh`, run `./utils/generate-keys.sh` for the auth/internal keys, then patch `supabase-project/.env` with `scripts/generate_supabase_env.sh --base-env supabase-project/.env --output supabase-project/.env` (non-overlapping inputs last), and then start Supabase using `docker compose up -d`. I will also remind you that DNS, host-managed Caddy, and TLS are required separately and are not configured by the helper script. Proceed? (yes/no)"
 
 If the operator answers `no`, abort and provide instructions for manual review and next steps.
 
@@ -75,7 +76,7 @@ docker compose ps
 Generate and manage secrets
 
 - Never use placeholder values from `.env.example` in production.
-- You can use `scripts/setup_supabase_project.sh` to clone upstream source, build `supabase-project`, patch `.env`, and generate auth/internal keys.
+- You can use `scripts/setup_supabase_project.sh` to clone upstream source, build `supabase-project`, generate auth/internal keys, and then patch `.env` (non-overlapping inputs).
 - You can also run the included generator directly to produce only the non-overlapping operator inputs:
 
 ```bash
