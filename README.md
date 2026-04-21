@@ -221,6 +221,9 @@ scripts/setup_supabase_project.sh
 - Ask the assistant to `use the supabase-self-hosting skill`.
 - The skill will collect the required operator inputs, patch
   `supabase-project/.env`, run `./utils/generate-keys.sh`, and start the stack.
+- Because you are in a Remote - SSH session, the agent can inspect the remote
+  server environment, answer server-specific questions, plan changes, and help
+  debug issues live on the production host.
 - The skill assumes host-managed Caddy is already installed and running from
   `scripts/bootstrap.sh`.
 
