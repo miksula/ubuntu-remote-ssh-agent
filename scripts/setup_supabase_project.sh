@@ -92,8 +92,8 @@ generate_keys() {
 main() {
   clone_source
   prepare_project_dir
-  patch_env
   generate_keys
+  patch_env
 
   echo "\nPartial Supabase setup complete."
   echo "Next steps:"

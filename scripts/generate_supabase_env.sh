@@ -50,6 +50,23 @@ ask() {
 gen_base64() { openssl rand -base64 "$1" 2>/dev/null || head -c "$1" /dev/urandom | base64; }
 gen_hex() { openssl rand -hex "$1" 2>/dev/null || head -c "$(( $1 * 2 ))" /dev/urandom | xxd -p -c 200; }
 
+normalize_url() {
+  local url="$1"
+  if [[ -z "$url" ]]; then
+    printf '%s' "$url"
+    return
+  fi
+  if [[ "$url" =~ ^https:// ]]; then
+    printf '%s' "$url"
+    return
+  fi
+  if [[ "$url" =~ ^http:// ]]; then
+    printf 'https://%s' "${url#http://}"
+    return
+  fi
+  printf 'https://%s' "$url"
+}
+
 update_env_key() {
   local file="$1" key="$2" value="$3"
   local tmp
@@ -89,14 +106,21 @@ fi
 echo "Generating Supabase .env -> $OUT_PATH"
 
 # Collect values
-SUPABASE_PUBLIC_URL=$(ask "External HTTPS base URL (SUPABASE_PUBLIC_URL, must start with https://)" "https://example.com")
-if [[ "$SUPABASE_PUBLIC_URL" != https://* ]]; then
-  echo "ERROR: SUPABASE_PUBLIC_URL must start with https://" >&2
-  exit 1
-fi
+SUPABASE_PUBLIC_URL=$(ask "External HTTPS base URL (SUPABASE_PUBLIC_URL, will add https:// if missing)" "https://example.com")
+SUPABASE_PUBLIC_URL=$(normalize_url "$SUPABASE_PUBLIC_URL")
 
 API_EXTERNAL_URL=$(ask "API_EXTERNAL_URL (leave empty to use SUPABASE_PUBLIC_URL)" "$SUPABASE_PUBLIC_URL")
+if [[ -n "$API_EXTERNAL_URL" ]]; then
+  API_EXTERNAL_URL=$(normalize_url "$API_EXTERNAL_URL")
+else
+  API_EXTERNAL_URL="$SUPABASE_PUBLIC_URL"
+fi
 SITE_URL=$(ask "SITE_URL (leave empty to use SUPABASE_PUBLIC_URL)" "$SUPABASE_PUBLIC_URL")
+if [[ -n "$SITE_URL" ]]; then
+  SITE_URL=$(normalize_url "$SITE_URL")
+else
+  SITE_URL="$SUPABASE_PUBLIC_URL"
+fi
 
 POSTGRES_PASSWORD_CHOICE=$(ask "Provide Postgres password or type 'generate' to create one" "generate")
 if [ "$POSTGRES_PASSWORD_CHOICE" = "generate" ]; then
