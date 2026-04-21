@@ -1,13 +1,13 @@
 # Ubuntu VPS Setup Guide
 
 This repository contains practical instructions for setting up a real Ubuntu
-(LTS) for self-hosting with VPS provider such as DigitalOcean or Hetzner.
+(LTS) server for self-hosting with VPS provider such as DigitalOcean or Hetzner.
 
-There is also Copilot-oriented skill for setting up self-hosted Supabase.
+There is also a Copilot-oriented skill for setting up self-hosted Supabase.
 
-- `.github/` folder contains Copilot-oriented instructions
-- `scripts/` folder contains executable automation and install scripts
-- `configs/` has example server configurations
+- `.github/` Copilot-oriented instructions
+- `scripts/` Automation and install scripts
+- `configs/` Example configurations
 
 ## 1. Create The Server In Hetzner Cloud
 
@@ -16,14 +16,14 @@ possible.
 
 ### SSH How-to
 
-Generate the SSH key (asks for filename, like `my_hetzner_key`)
+Generate the SSH key (asks for filename, e.g. `my_hetzner_key`)
 
 ```bash
 ssh-keygen -t ed25519 -C "your-email@example.com"
 ```
 
-Wait for server to be created and the IPv4 address to be assigned (like
-`65.21.123.45`).
+Wait for server to be created and the IPv4 address to be assigned (address
+`65.21.123.45` used as an example here).
 
 Then connect via terminal
 
@@ -35,7 +35,7 @@ Simplify with SSH Config (recommended)
 
 Add an entry to ~/.ssh/config so you can connect with a short alias
 
-```bash
+```
 Host hetzner-1
     HostName 65.21.123.45
     User root
@@ -174,15 +174,19 @@ sudo journalctl -u caddy -f
 ```
 
 Notes for the included examples:
-- Static files example serves content from `/var/www/site` (set `root * /var/www/site` to your directory).
-- SPA + Node example serves SPA assets from `/var/www/site` and proxies only `/api/*` to `127.0.0.1:3000`.
+
+- Static files example serves content from `/var/www/site` (set
+  `root * /var/www/site` to your directory).
+- SPA + Node example serves SPA assets from `/var/www/site` and proxies only
+  `/api/*` to `127.0.0.1:3000`.
 - Supabase example assumes Supabase gateway is reachable on `127.0.0.1:8000`.
 
 ## 4. Install Supabase
 
-This repository supports two Supabase setup paths:
+This repository supports three Supabase setup paths:
 
 - Manual setup
+- Scripted setup with `scripts/setup_supabase_project.sh`
 - Agent-assisted setup with the `supabase-self-hosting` skill
 
 Both paths use the same host-managed Caddy reverse proxy from step 3.
@@ -202,6 +206,12 @@ sh ./utils/generate-keys.sh
 docker compose pull
 docker compose up -d
 docker compose ps
+```
+
+### Scripted setup
+
+```bash
+scripts/setup_supabase_project.sh
 ```
 
 ### Agent-assisted setup
